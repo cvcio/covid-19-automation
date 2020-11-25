@@ -230,10 +230,12 @@ class IMEDDStrategy(object):
         df = df.rename(columns={
             "cases": "new_cases", "deaths": "new_deaths", 
             "hospitalized": "new_hospitalized",
-            "total cases": "cases"
+            "total cases": "cases",
+            "intubated": "critical"
         })        
         df["deaths"] = df.new_deaths.cumsum()
         df["recovered"] = df["recovered"].fillna(method='pad')
+        
         group = (
             df.groupby(
                ["date", "population", "lat", "long", "country", "iso2", "iso3", "uid"]
@@ -276,7 +278,7 @@ class IMEDDStrategy(object):
                 "new_recovered",
                 "estimated_daily_tests_pcr_rapid",
                 "new_hospitalized", "intensive_care", 
-                "intubated", "total_rapid_tests", "total_tests",
+                "critical", "total_rapid_tests", "total_tests",
             ]
         ] = df[
             [
@@ -290,7 +292,7 @@ class IMEDDStrategy(object):
                 "new_recovered",
                 "estimated_daily_tests_pcr_rapid",
                 "new_hospitalized", "intensive_care", 
-                "intubated", "total_rapid_tests", "total_tests",
+                "critical", "total_rapid_tests", "total_tests",
             ]
         ].astype(
             "int"
@@ -318,8 +320,11 @@ class IMEDDStrategy(object):
                 "new_deaths",
                 "new_recovered",
                 "estimated_daily_tests_pcr_rapid",
-                "new_hospitalized", "intensive_care", 
-                "intubated", "total_rapid_tests", "total_tests",
+                "new_hospitalized",
+                "intensive_care", 
+                "critical",
+                "total_rapid_tests",
+                "total_tests",
                 "case_fatality_ratio",
                 "incidence_rate",
                 "source",
@@ -329,7 +334,6 @@ class IMEDDStrategy(object):
         df["iso2"] = df["iso2"].str.upper() 
         df["iso3"] = df["iso3"].str.upper() 
         df["last_updated_at"] = pd.to_datetime(datetime.today())
-        
         df.to_csv(
             "{}{}-{}-timeline.csv".format(
                 self.config.get("output"),
@@ -401,13 +405,21 @@ class IMEDDStrategy(object):
         now_df = now_df.drop(["Γεωγραφικό Διαμέρισμα", "Περιφέρεια", "county_normalized", "county", "pop_11", "county_en", "Πρωτεύουσα"], axis = 1)
         now_df["date"] = now
         
-        dates = confirmed_df.columns[0:-7]
+        confirmed_df = confirmed_df[["uid", "geo_unit", "state", "region", "population", "lat", "long"] + confirmed_df.columns[:-7].tolist()]
+        deaths_df = deaths_df[["uid", "geo_unit", "state", "region", "population", "lat", "long"] + deaths_df.columns[:-7].tolist()]
+        
+        dates = confirmed_df.columns[7:]
+        if len(confirmed_df.columns[7:]) < len(deaths_df.columns[7:]):
+            confirmed_df[deaths_df.columns.tolist()[-1]] = confirmed_df[-1]
+        elif len(confirmed_df.columns[7:]) > len(deaths_df.columns[7:]):
+            deaths_df[confirmed_df.columns.tolist()[-1]] = deaths_df[-1]
+        
         # pivot table using melt
         confirmed_df = confirmed_df.melt(
             id_vars=[
                 "uid", "geo_unit", "state", "region", "population", "lat", "long"
             ],
-            value_vars=confirmed_df.columns[0:-7],
+            value_vars=dates,
             var_name="date",
             value_name="cases",
         )
@@ -417,7 +429,7 @@ class IMEDDStrategy(object):
             id_vars=[
                "uid", "geo_unit", "state", "region", "population", "lat", "long"
             ],
-            value_vars=deaths_df.columns[0:-7],
+            value_vars=dates,
             var_name="date",
             value_name="deaths",
         )
@@ -434,34 +446,34 @@ class IMEDDStrategy(object):
         
         df["date"] = pd.to_datetime(df["date"])
         
-        # group = (
-        #     df.groupby(
-        #        ["date", "uid", "geo_unit", "state", "region", "population", "lat", "long"]
-        #     )[["cases", "deaths"]] # , "recovered", "active"
-        #     .sum()
-        #     .reset_index()
-        # )
-        # # calc new values per date on cases, deaths, recovered
-        # temp = group.groupby(["uid", "date"])[["cases", "deaths"]] # , "recovered"
-        # temp = temp.sum().diff().reset_index()
-
-        # mask = temp["uid"] != temp["uid"].shift(1)
-        # temp.loc[mask, "cases"] = np.nan
-        # temp.loc[mask, "deaths"] = np.nan
-        # # t emp.loc[mask, "recovered"] = np.nan
-        # # renaming columns
-        # temp.columns = [
-        #     "uid",
-        #     "date",
-        #     "new_cases",
-        #     "new_deaths",
-        #     # "new_recovered"
-        # ]
-
-        # # merging new values
-        # group = pd.merge(group, temp, on=["uid", "date"])
+        group = (
+            df.groupby(
+                ["date", "uid", "geo_unit", "state", "region", "population", "lat", "long"]
+            )[["cases", "deaths"]]
+            .sum()
+            .reset_index()
+        )
+        # calc new values per date on cases, deaths, recovered
+        temp = group.groupby(["uid", "date"])[["cases", "deaths"]]
+        temp = temp.sum().diff().reset_index()
+        
+        mask = temp["uid"] != temp["uid"].shift(1)
+        temp.loc[mask, "cases"] = np.nan
+        temp.loc[mask, "deaths"] = np.nan
+        
+        # renaming columns
+        temp.columns = [
+            "uid",
+            "date",
+            "new_cases",
+            "new_deaths",
+        ]
+        
+        # merging new values
+        group = pd.merge(group, temp, on=["uid", "date"])
+        df = group
         # df = group
-        df[["new_cases", "new_deaths"]] = df.apply(lambda x: self.get_last_occur_ncd(x, df), axis=1, result_type="expand")
+        # df[["new_cases", "new_deaths"]] = df.apply(lambda x: self.get_last_occur_ncd(x, df), axis=1, result_type="expand")
         if len(df.loc[df["date"] == now]) == 0:
             # print(now_df)
             now_df[["cases", "deaths"]] = now_df.apply(lambda x: self.get_last_occur_cd(x, df), axis=1, result_type="expand")

@@ -65,53 +65,23 @@ class WOMStrategy(object):
             .get_database("covid19")
             .get_collection(self.collection)
         )
-        if self.config.get("drop"):
-            logging.debug("[WOM] Migrate Documents {}".format(len(self.docs)))
-            deleted = coll.delete_many({"source": "worldometer"})
-            logging.debug(
-                "[WOM] Migration Drop Docs, {} deleted from {} in {}s".format(
-                    deleted.deleted_count,
-                    self.collection,
-                    round(time.time() - start, 2),
-                )
+        logging.debug("[WOM] Migrate Documents {}".format(len(self.docs)))
+        deleted = coll.delete_many({"source": "worldometer"})
+        logging.debug(
+            "[WOM] Migration Drop Docs, {} deleted from {} in {}s".format(
+                deleted.deleted_count,
+                self.collection,
+                round(time.time() - start, 2),
             )
-            result = coll.insert_many(self.docs)
-            logging.debug(
-                "[WOM] Migration Completed, {} inserted in {} in {}s".format(
-                    len(result.inserted_ids),
-                    self.collection,
-                    round(time.time() - start, 2),
-                )
+        )
+        result = coll.insert_many(self.docs)
+        logging.debug(
+            "[WOM] Migration Completed, {} inserted in {} in {}s".format(
+                len(result.inserted_ids),
+                self.collection,
+                round(time.time() - start, 2),
             )
-        else:
-            dates = [
-                pd.to_datetime(datetime.today().strftime("%Y-%m-%d"))
-            ]
-            reqs = [
-                ReplaceOne(
-                    {
-                        "date": doc["date"],
-                        "uid": doc["uid"],
-                        "iso3": doc["iso3"],
-                        "country": doc["country"],
-                        "source": doc["source"],
-                    },
-                    doc,
-                    upsert=True,
-                )
-                for doc in self.docs
-                if doc["date"] in dates
-            ]
-            logging.debug("[WOM] Migrate Documents {}".format(len(reqs)))
-            result = coll.bulk_write(reqs)
-            logging.debug(
-                "[WOM] Migration Completed, {} inserted, {} modified in {} in {}s".format(
-                    result.inserted_count,
-                    result.modified_count,
-                    self.collection,
-                    round(time.time() - start, 2),
-                )
-            )
+        )
             
     def clean(self):
         pass

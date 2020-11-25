@@ -328,11 +328,12 @@ class JHUStrategy(object):
         # calc new values per date on cases, deaths, recovered
         temp = group.groupby(["country", "date"])[["cases", "deaths", "recovered"]]
         temp = temp.sum().diff().reset_index()
-
+        
         mask = temp["country"] != temp["country"].shift(1)
         temp.loc[mask, "cases"] = np.nan
         temp.loc[mask, "deaths"] = np.nan
         temp.loc[mask, "recovered"] = np.nan
+        
         # renaming columns
         temp.columns = [
             "country",
@@ -341,7 +342,7 @@ class JHUStrategy(object):
             "new_deaths",
             "new_recovered",
         ]
-
+        
         # merging new values
         group = pd.merge(group, temp, on=["country", "date"])
         # filling na with 0
