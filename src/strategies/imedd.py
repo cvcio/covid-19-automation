@@ -446,32 +446,22 @@ class IMEDDStrategy(object):
         
         df["date"] = pd.to_datetime(df["date"])
         
-        group = (
-            df.groupby(
-                ["date", "uid", "geo_unit", "state", "region", "population", "lat", "long"]
-            )[["cases", "deaths"]]
-            .sum()
-            .reset_index()
-        )
         # calc new values per date on cases, deaths, recovered
-        temp = group.groupby(["uid", "date"])[["cases", "deaths"]]
+        temp = df.groupby(["uid", "date"])[["cases", "deaths"]]
         temp = temp.sum().diff().reset_index()
         
         mask = temp["uid"] != temp["uid"].shift(1)
         temp.loc[mask, "cases"] = np.nan
         temp.loc[mask, "deaths"] = np.nan
-        
         # renaming columns
         temp.columns = [
             "uid",
             "date",
             "new_cases",
             "new_deaths",
-        ]
-        
+        ]        
         # merging new values
-        group = pd.merge(group, temp, on=["uid", "date"])
-        df = group
+        df = pd.merge(df, temp, on=["uid", "date"])
         # df = group
         # df[["new_cases", "new_deaths"]] = df.apply(lambda x: self.get_last_occur_ncd(x, df), axis=1, result_type="expand")
         if len(df.loc[df["date"] == now]) == 0:
