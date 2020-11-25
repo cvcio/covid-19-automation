@@ -2,7 +2,10 @@
 
 exit_code=0
 
-python src/covid-19.py --log-level info --source all --drop true --clone true
+if [[ ! -v MONGO_URL ]]; then
+    MONGO_URL="mongodb://localhost:27017/"
+fi
+python src/covid-19.py --log-level info --source all --drop true --clone true --mongo $MONGO_URL
 
 echo "$0 finished with code $exit_code."
 exit $exit_code
