@@ -277,9 +277,14 @@ class IMEDDStrategy(object):
                 "new_cases",
                 "new_deaths",
                 "new_recovered",
-                "estimated_daily_tests_pcr_rapid",
-                "new_hospitalized", "intensive_care", 
-                "critical", "total_rapid_tests", "total_tests",
+                "new_hospitalized", 
+                "intensive_care", 
+                "critical", 
+                "cumulative_rtpcr_tests_raw",
+                "estimated_new_rtpcr_tests", 
+                "cumulative_rapid_tests_raw",
+                "esitmated_new_rapid_tests",
+                "estimated_new_total_tests"
             ]
         ] = df[
             [
@@ -291,9 +296,14 @@ class IMEDDStrategy(object):
                 "new_cases",
                 "new_deaths",
                 "new_recovered",
-                "estimated_daily_tests_pcr_rapid",
-                "new_hospitalized", "intensive_care", 
-                "critical", "total_rapid_tests", "total_tests",
+                "new_hospitalized", 
+                "intensive_care", 
+                "critical", 
+                "cumulative_rtpcr_tests_raw",
+                "estimated_new_rtpcr_tests", 
+                "cumulative_rapid_tests_raw",
+                "esitmated_new_rapid_tests",
+                "estimated_new_total_tests"
             ]
         ].astype(
             "int"
@@ -320,14 +330,14 @@ class IMEDDStrategy(object):
                 "new_cases",
                 "new_deaths",
                 "new_recovered",
-                "estimated_daily_tests_pcr_rapid",
-                "new_hospitalized",
+                "new_hospitalized", 
                 "intensive_care", 
-                "critical",
-                "total_rapid_tests",
-                "total_tests",
-                "case_fatality_ratio",
-                "incidence_rate",
+                "critical", 
+                "cumulative_rtpcr_tests_raw",
+                "estimated_new_rtpcr_tests", 
+                "cumulative_rapid_tests_raw",
+                "esitmated_new_rapid_tests",
+                "estimated_new_total_tests",
                 "source",
             ]
         ]
