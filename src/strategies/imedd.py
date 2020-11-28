@@ -234,6 +234,7 @@ class IMEDDStrategy(object):
             "intubated": "critical"
         })        
         df["deaths"] = df.new_deaths.cumsum()
+        df["critical"] = df["critical"].fillna(0)
         df["recovered"] = df["recovered"].fillna(method='pad')
         
         group = (
@@ -261,7 +262,7 @@ class IMEDDStrategy(object):
         df = pd.merge(df, temp, on=["uid", "date"])
         # filling na with 0
         df = df.fillna(0)
-        
+                
         # df["new_recovered"] = df.recovered.cumsum()
         df["active"] = df["cases"] - df["deaths"] - df["recovered"]
 
