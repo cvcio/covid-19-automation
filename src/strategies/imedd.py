@@ -129,9 +129,6 @@ class IMEDDStrategy(object):
             deleted = coll.delete_many(
                 {
                     "iso3": "GRC",
-                    "source": { 
-                        "$in": ["imedd", "jhu"]
-                    }, 
                     "date": { 
                         "$in": timeline["date"].tolist()
                     }
