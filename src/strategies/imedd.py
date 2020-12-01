@@ -230,9 +230,11 @@ class IMEDDStrategy(object):
             "cases": "new_cases", "deaths": "new_deaths", 
             "hospitalized": "new_hospitalized",
             "total cases": "cases",
-            "intubated": "critical"
-        })        
+            "intubated": "critical",
+            "estimated_new_total_tests": "new_tests"
+        }) 
         df["deaths"] = df.new_deaths.cumsum()
+        df["tests"] = df.new_tests.cumsum()
         df["critical"] = df["critical"].fillna(0)
         df["recovered"] = df["recovered"].fillna(method='pad')
         
@@ -283,7 +285,8 @@ class IMEDDStrategy(object):
                 "estimated_new_rtpcr_tests", 
                 "cumulative_rapid_tests_raw",
                 "esitmated_new_rapid_tests",
-                "estimated_new_total_tests"
+                "tests",
+                "new_tests"
             ]
         ] = df[
             [
@@ -302,7 +305,8 @@ class IMEDDStrategy(object):
                 "estimated_new_rtpcr_tests", 
                 "cumulative_rapid_tests_raw",
                 "esitmated_new_rapid_tests",
-                "estimated_new_total_tests"
+                "tests",
+                "new_tests"
             ]
         ].astype(
             "int"
@@ -336,7 +340,8 @@ class IMEDDStrategy(object):
                 "estimated_new_rtpcr_tests", 
                 "cumulative_rapid_tests_raw",
                 "esitmated_new_rapid_tests",
-                "estimated_new_total_tests",
+                "tests",
+                "new_tests",
                 "source",
             ]
         ]
