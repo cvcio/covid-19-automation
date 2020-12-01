@@ -197,6 +197,8 @@ class IMEDDStrategy(object):
             + "greeceTimeline.csv"
         )
         
+        # now_df = now_df[now_df['Country/Region'].notnull()]
+        
         df = df.rename(columns={"Date": "date", "Status": "status", "Province/State": "state", "Country/Region": "county"})
         dates = df.columns[3:]
         
@@ -382,6 +384,7 @@ class IMEDDStrategy(object):
             + DATA_IMEDD_BASE_PATH
             + "greece_latest.csv"
         )
+        now_df = now_df[now_df.county_normalized.notnull()]
 
         logging.debug("[IMEDD] Data Loaded")
         
@@ -412,16 +415,16 @@ class IMEDDStrategy(object):
         now_df = now_df[now_df["uid"].str.strip().astype(bool)]
         now_df = now_df.drop(["Γεωγραφικό Διαμέρισμα", "Περιφέρεια", "county_normalized", "county", "pop_11", "county_en", "Πρωτεύουσα"], axis = 1)
         now_df["date"] = now
-        
+       
         confirmed_df = confirmed_df[["uid", "geo_unit", "state", "region", "population", "lat", "long"] + confirmed_df.columns[:-7].tolist()]
         deaths_df = deaths_df[["uid", "geo_unit", "state", "region", "population", "lat", "long"] + deaths_df.columns[:-7].tolist()]
         
         dates = confirmed_df.columns[7:]
         if len(confirmed_df.columns[7:]) < len(deaths_df.columns[7:]):
-            confirmed_df[deaths_df.columns.tolist()[-1]] = confirmed_df[-1]
+            confirmed_df[deaths_df.columns.tolist()[-1]] = confirmed_df[confirmed_df.columns[-1]]
         elif len(confirmed_df.columns[7:]) > len(deaths_df.columns[7:]):
-            deaths_df[confirmed_df.columns.tolist()[-1]] = deaths_df[-1]
-        
+            deaths_df[confirmed_df.columns.tolist()[-1]] = deaths_df[deaths_df.columns[-1]]
+            
         # pivot table using melt
         confirmed_df = confirmed_df.melt(
             id_vars=[
