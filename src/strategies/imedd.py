@@ -233,7 +233,9 @@ class IMEDDStrategy(object):
             "intubated": "critical",
             "estimated_new_total_tests": "new_tests"
         }) 
+        
         df["deaths"] = df.new_deaths.cumsum()
+        df["deaths"] = df["deaths"].fillna(method='pad')
         df["tests"] = df.new_tests.cumsum()
         df["critical"] = df["critical"].fillna(0)
         df["recovered"] = df["recovered"].fillna(method='pad')
