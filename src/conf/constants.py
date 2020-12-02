@@ -57,7 +57,8 @@ EXCLUDE_ROWS = [
     "Total:",
     "MS Zaandam",
     "Diamond Princess",
-    "Wallis and Futuna"
+    "Wallis and Futuna",
+    "Greece"
 ]
 
 OUTPUT = "data/"
