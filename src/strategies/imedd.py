@@ -338,6 +338,8 @@ class IMEDDStrategy(object):
                 "new_hospitalized", 
                 "intensive_care", 
                 "critical", 
+                "incidence_rate",
+                "case_fatality_ratio",
                 "cumulative_rtpcr_tests_raw",
                 "estimated_new_rtpcr_tests", 
                 "cumulative_rapid_tests_raw",
