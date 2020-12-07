@@ -231,7 +231,11 @@ class IMEDDStrategy(object):
             "hospitalized": "new_hospitalized",
             "total cases": "cases",
             "intubated": "critical",
-            "estimated_new_total_tests": "new_tests"
+            "estimated_new_total_tests": "new_tests",
+            "cumulative_rtpcr_tests_raw": "tests_rtpcr",
+            "estimated_new_rtpcr_tests": "new_tests_rtpcr",
+            "cumulative_rapid_tests_raw": "tests_rapid",
+            "esitmated_new_rapid_tests": "new_tests_rapid",
         }) 
         
         df["deaths"] = df.new_deaths.cumsum()
@@ -266,7 +270,7 @@ class IMEDDStrategy(object):
         # filling na with 0
         df = df.fillna(0)
                 
-        # df["new_recovered"] = df.recovered.cumsum()
+        df["tests"] = df.new_tests.cumsum()
         df["active"] = df["cases"] - df["deaths"] - df["recovered"]
 
         # fixing data types
@@ -283,10 +287,12 @@ class IMEDDStrategy(object):
                 "new_hospitalized", 
                 "intensive_care", 
                 "critical", 
-                "cumulative_rtpcr_tests_raw",
-                "estimated_new_rtpcr_tests", 
-                "cumulative_rapid_tests_raw",
-                "esitmated_new_rapid_tests",
+                
+                "tests_rtpcr",
+                "new_tests_rtpcr", 
+                "tests_rapid",
+                "new_tests_rapid",
+                
                 "tests",
                 "new_tests"
             ]
@@ -303,10 +309,12 @@ class IMEDDStrategy(object):
                 "new_hospitalized", 
                 "intensive_care", 
                 "critical", 
-                "cumulative_rtpcr_tests_raw",
-                "estimated_new_rtpcr_tests", 
-                "cumulative_rapid_tests_raw",
-                "esitmated_new_rapid_tests",
+                
+                "tests_rtpcr",
+                "new_tests_rtpcr", 
+                "tests_rapid",
+                "new_tests_rapid",
+                
                 "tests",
                 "new_tests"
             ]
@@ -340,10 +348,12 @@ class IMEDDStrategy(object):
                 "critical", 
                 "incidence_rate",
                 "case_fatality_ratio",
-                "cumulative_rtpcr_tests_raw",
-                "estimated_new_rtpcr_tests", 
-                "cumulative_rapid_tests_raw",
-                "esitmated_new_rapid_tests",
+                
+                "tests_rtpcr",
+                "new_tests_rtpcr", 
+                "tests_rapid",
+                "new_tests_rapid",
+                
                 "tests",
                 "new_tests",
                 "source",

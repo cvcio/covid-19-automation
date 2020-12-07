@@ -66,7 +66,7 @@ def getStrategy(source, *options):
     # switch case dictionary
     switch = {
         "jhu": JHUStrategy,
-        "worldometer": WOMStrategy,
+        "worldometer": None,
         "imedd": IMEDDStrategy,
         "who": None,
         "eody": None,
