@@ -1,2 +1,5 @@
-http://www.statoids.com/ugr.html
-https://en.wikipedia.org/wiki/List_of_FIPS_region_codes_(G%E2%80%93I)#GR:_Greece
+# COVID&ndash;19 Automation
+
+COVID&ndash;19 Automation retrieves COVID&ndash;19 related data from [Johns Hopkins University](https://www.jhu.edu/) and from [iMEdD](https://github.com/iMEdD-Lab) and inserts into [MongoDB](http://mongodb.com/).
+
+In general, we collect data from [Johns Hopkins CSSE]((https://github.com/CSSEGISandData/COVID-19)) ~~and [WoldOMeter](https://www.worldometers.info/coronavirus/)~~ for the global collection, and from [iMEdD](https://github.com/iMEdD-Lab) for data related to Greece. You can read more about the data in [iMEdD](https://imedd.org/)'s [open-data relevant repository](https://github.com/iMEdD-Lab/open-data) or see in action the [COVID&ndash;19 Data Visualization Dashboard](https://lab.imedd.org/covid19/). If you are interested in the data collection mechanism you can refer to [COVID&ndash;19 automation](https://github.com/cvcio/covid-19-automation) service.
