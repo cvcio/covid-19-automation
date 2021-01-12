@@ -17,6 +17,7 @@ from conf.constants import ALLOWED_SOURCES
 from strategies.jhu import JHUStrategy
 from strategies.wom import WOMStrategy
 from strategies.imedd import IMEDDStrategy
+from strategies.govgr import GovGRStrategy
 
 """
 Logging
@@ -68,6 +69,7 @@ def getStrategy(source, *options):
         "jhu": JHUStrategy,
         "worldometer": None,
         "imedd": IMEDDStrategy,
+        "govgr": GovGRStrategy,
         "who": None,
         "eody": None,
         "sch": None,
@@ -77,7 +79,7 @@ def getStrategy(source, *options):
     strategy = switch.get(source, lambda: "Invalid source")
 
     if strategy == None:
-        logging.warning("Sorry, {} strategy not implemented yet".format(source.upper()))
+        logging.warning("Sorry, {} strategy not implemented yet or inactive".format(source.upper()))
         return None
 
     try:  # try to extract data
@@ -85,6 +87,9 @@ def getStrategy(source, *options):
         return s.get()
     except Warning as w:  # warn and pass on warning
         logging.warning(str(w))
+        return None
+    except Exception as s:  # warn and pass on warning
+        logging.error(str(s))
         return None
 
 
@@ -98,14 +103,31 @@ def get_mongodb_client(uri):
 def create_indexes(client, db, collection):
     coll = client.get_database(db).get_collection(collection)
     coll.create_index("date")
+    coll.create_index("uid")
+    
+    coll.create_index([("uid", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
+    coll.create_index([("source", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
+    
     if collection == "global":
-        coll.create_index([("uid", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
+        coll.create_index("iso3")
+        coll.create_index("country")
         coll.create_index([("iso3", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
         coll.create_index([("country", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
-    else:
-        coll.create_index([("uid", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
+    
+    elif collection == "greece":
+        coll.create_index("region")
+        coll.create_index("state")
         coll.create_index([("region", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
         coll.create_index([("state", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
+   
+    elif collection == "gr_vaccines":
+        coll.create_index("region")
+        coll.create_index("state")
+        coll.create_index("area")
+        coll.create_index([("region", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
+        coll.create_index([("state", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
+        coll.create_index([("area", pymongo.ASCENDING), ("date", pymongo.ASCENDING)], sparse=True)
+
 
 """
 Initialize Covid-19 Automation Script
@@ -163,6 +185,13 @@ def cli():
         help="Database name",
         default="covid19",
     )
+    
+    parser.add_argument(
+        "--govgr_token",
+        dest="govgr_token",
+        help="GovGR API Token",
+        default="",
+    )
 
     # parse cli arguments
     args = parser.parse_args()
@@ -185,7 +214,7 @@ def cli():
         strategy = getStrategy(source, vars(args))
         strategies.append(strategy)
     logging.debug(
-        "All documents have been generated in {}s".format(
+        "All strategies completed in {}s".format(
             round(time.time() - start, 2),
         )
     )
@@ -200,6 +229,7 @@ def cli():
     if args.drop:
         create_indexes(mongo_client, args.db, "global")
         create_indexes(mongo_client, args.db, "greece")
+        create_indexes(mongo_client, args.db, "gr_vaccines")
 
 
 if __name__ == "__main__":

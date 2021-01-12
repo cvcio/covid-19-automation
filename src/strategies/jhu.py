@@ -379,6 +379,7 @@ class JHUStrategy(object):
         df["case_fatality_ratio"] = df.apply(calc_fatality_ratio, axis=1)
         df["incidence_rate"] = df.apply(calc_incidence_rate, axis=1)
         df["source"] = "jhu"
+        df["last_updated_at"] = pd.to_datetime(datetime.today())
         df = df[
             [
                 "date",
@@ -399,10 +400,9 @@ class JHUStrategy(object):
                 "case_fatality_ratio",
                 "incidence_rate",
                 "source",
+                "last_updated_at"
             ]
         ]
-        
-        df["last_updated_at"] = pd.to_datetime(datetime.today())
 
         logging.debug("[JHU] Shape {}".format(df.shape))
         logging.debug("[JHU] Data\n{}".format(df))

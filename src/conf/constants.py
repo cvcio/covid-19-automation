@@ -2,7 +2,7 @@
 Set Constants
 """
 
-ALLOWED_SOURCES = ["jhu", "worldometer", "imedd", "who", "sch"]
+ALLOWED_SOURCES = ["jhu", "worldometer", "imedd", "govgr", "who", "sch"]
 COLUMN_MAPPINGS = {
     "Country,Other": "country",
     "TotalCases": "cases",

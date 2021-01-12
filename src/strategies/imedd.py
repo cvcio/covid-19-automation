@@ -381,6 +381,7 @@ class IMEDDStrategy(object):
             self.clone(REPO_IMEDD_URL, self.config.get("tmp") + "imedd")
        
         fips = pd.read_csv("./data/region-mapping-imedd.csv")
+        fips = fips[fips["uid"].notna()]
         fips = fips.rename(columns=COLUMN_MAPPINGS).to_dict("records")
         
         now = pd.to_datetime(datetime.today().strftime("%m/%d/%Y"))
@@ -582,7 +583,7 @@ class IMEDDStrategy(object):
     def _get_fips(self, x, fips):
         for y in fips:
             if (
-                y["region_el"] == x["county"]
+                y["region_el"] == x["county"] 
                 or y["map_value"] == x["county"]
             ):
                 return (

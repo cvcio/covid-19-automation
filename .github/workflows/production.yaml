@@ -33,6 +33,7 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
+          build-args: GOVGR_TOKEN=${{ secrets.GOVGR_TOKEN }}
           tags: |
             ${{ secrets.CVCIO_CONTAINER_REGISTRY }}/covid-19-automation:${{ steps.vars.outputs.tag }}
             ${{ secrets.CVCIO_CONTAINER_REGISTRY }}/covid-19-automation:latest
