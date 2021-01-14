@@ -134,8 +134,26 @@ class GovGRStrategy(object):
             "daytotal": "day_total",
             "daydiff": "day_diff"
         })
+        
         df["date"] = pd.to_datetime(df["referencedate"])
         df = df.sort_values(by="date").reset_index(drop = True)
+        df = df.drop(columns=["referencedate"])
+        
+        first_day = df[df["date"] == pd.to_datetime(datetime.strptime("2020-12-28", "%Y-%m-%d"))]
+        first_day = first_day.reset_index(drop = True)
+        first_day.loc[:,"date"] = pd.to_datetime(datetime.strptime("2020-12-27", "%Y-%m-%d"))
+        
+        first_day["temp"] = first_day["total_distinct_persons"] - first_day["day_total"]
+        
+        first_day.loc[:,"total_distinct_persons"] = first_day["temp"]
+        first_day.loc[:,"total_vaccinations"] = first_day["temp"]
+        first_day.loc[:,"day_total"] = first_day["temp"]
+        first_day.loc[:,"day_diff"] = first_day["temp"]
+        
+        first_day = first_day.drop(columns=["temp"])
+        
+        df = df.append(first_day).reset_index(drop = True)
+        
         df["uid"] = df["areaid"].apply(lambda x: "PE{}".format(x))
             
         group = (
@@ -183,6 +201,9 @@ class GovGRStrategy(object):
         
         df = group
         
+        df.loc[df["date"] == pd.to_datetime(datetime.strptime("2020-12-27", "%Y-%m-%d")), ["new_total_distinct_persons"]] = df["day_total"]
+        df.loc[df["date"] == pd.to_datetime(datetime.strptime("2020-12-27", "%Y-%m-%d")), ["new_total_vaccinations"]] = df["day_total"]
+
         df[
             ["geo_unit", "state", "region", "population", "lat", "long"]
         ] = df.apply(
@@ -192,11 +213,12 @@ class GovGRStrategy(object):
         df["last_updated_at"] = pd.to_datetime(datetime.today())
         df["source"] = "govgr"
         
-        # df = df.drop(columns=["referencedate"])
+        
         df = df.sort_values(by="date").reset_index(drop = True)
         
         logging.debug("[GOVGR] Shape {}".format(df.shape))
         logging.debug("[GOVGR] Data\n{}".format(df))
+        logging.debug("[GOVGR] Data SUM {}".format(df["new_total_vaccinations"].sum()))
         logging.debug("[GOVGR] Done!")
         
         self.dataframe = df
