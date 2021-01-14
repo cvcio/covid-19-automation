@@ -128,10 +128,60 @@ class GovGRStrategy(object):
         logging.debug("[GOVGR] Data Loaded")
 
         df = pd.DataFrame.from_dict(response.json(), orient = "columns")
+        df = df.rename(columns = {
+            "totaldistinctpersons": "total_distinct_persons",
+            "totalvaccinations": "total_vaccinations",
+            "daytotal": "day_total",
+            "daydiff": "day_diff"
+        })
         df["date"] = pd.to_datetime(df["referencedate"])
-        df["last_updated_at"] = pd.to_datetime(datetime.today())
+        df = df.sort_values(by="date").reset_index(drop = True)
         df["uid"] = df["areaid"].apply(lambda x: "PE{}".format(x))
-        df["source"] = "govgr"
+            
+        group = (
+            df.groupby(
+                ["date", "area", "areaid", "uid"]
+            )[["total_distinct_persons", "total_vaccinations", "day_total", "day_diff"]]
+            .sum()
+            .reset_index()
+        )
+
+        # calc new values per date on cases, deaths, recovered
+        temp = group.groupby(["uid", "date"])[["total_distinct_persons", "total_vaccinations"]]
+        temp = temp.sum().diff().reset_index()
+        
+        mask = temp["uid"] != temp["uid"].shift(1)
+        temp.loc[mask, "total_distinct_persons"] = np.nan
+        temp.loc[mask, "total_vaccinations"] = np.nan
+        
+        # renaming columns
+        temp.columns = [
+            "uid",
+            "date",
+            "new_total_distinct_persons",
+            "new_total_vaccinations"
+        ]
+        
+        # merging new values
+        group = pd.merge(group, temp, on=["uid", "date"])
+        # filling na with 0
+        group = group.fillna(0)
+        
+        group[
+            [
+                "new_total_distinct_persons",
+                "new_total_vaccinations"
+            ]
+        ] = group[
+            [
+                "new_total_distinct_persons",
+                "new_total_vaccinations"
+            ]
+        ].astype(
+            "int"
+        )
+        
+        df = group
         
         df[
             ["geo_unit", "state", "region", "population", "lat", "long"]
@@ -139,7 +189,11 @@ class GovGRStrategy(object):
             lambda x: self._get_fips(x, fips), axis=1, result_type="expand"
         )
         
-        df = df.drop(columns=["referencedate"])
+        df["last_updated_at"] = pd.to_datetime(datetime.today())
+        df["source"] = "govgr"
+        
+        # df = df.drop(columns=["referencedate"])
+        df = df.sort_values(by="date").reset_index(drop = True)
         
         logging.debug("[GOVGR] Shape {}".format(df.shape))
         logging.debug("[GOVGR] Data\n{}".format(df))
@@ -170,7 +224,7 @@ class GovGRStrategy(object):
                     y["geo_unit"],
                     y["state"],
                     y["region"],
-                    y["population_pe"],
+                    y["population"],
                     y["lat"],
                     y["long"]
                 )
