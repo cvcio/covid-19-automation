@@ -112,7 +112,7 @@ class GovGRStrategy(object):
         fips = fips[fips["areaid"].notna()]
         fips = fips.rename(columns=COLUMN_MAPPINGS).to_dict("records")
         
-        url = "https://data.gov.gr/api/v1/query/mdg_emvolio?date_from=2020-12-27&date_to={}".format(datetime.today().strftime("%Y-%m-%d"))
+        url = "https://data.gov.gr/api/v1/query/mdg_emvolio?date_from=2020-12-27&date_to={}&{}".format(datetime.today().strftime("%Y-%m-%d"), time.time())
         headers = {
             "Authorization": "Token {}".format(self.config.get("govgr_token"))
         }
