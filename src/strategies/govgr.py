@@ -124,7 +124,7 @@ class GovGRStrategy(object):
             raise
         except Exception:
             raise
-        
+                
         logging.debug("[GOVGR] Data Loaded")
 
         df = pd.DataFrame.from_dict(response.json(), orient = "columns")
