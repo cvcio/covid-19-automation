@@ -241,7 +241,7 @@ class IMEDDStrategy(object):
         df["deaths"] = df.new_deaths.cumsum()
         df["deaths"] = df["deaths"].fillna(method='pad')
         df["tests"] = df.new_tests.cumsum()
-        df["critical"] = df["critical"].fillna(0)
+        df["critical"] = df["critical"].fillna(method='pad')
         df["recovered"] = df["recovered"].fillna(method='pad')
         
         group = (
