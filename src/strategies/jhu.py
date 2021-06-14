@@ -310,7 +310,7 @@ class JHUStrategy(object):
         df = df.rename(columns=COLUMN_MAPPINGS)
 
         logging.debug("[JHU] Data Cleaned & Merged, Building...")
-        df["date"] = pd.to_datetime(df["date"])
+        df["date"] = pd.to_datetime(df["date"], format='%m/%d/%y')
         
         # df = df.groupby(["date", "population", "lat", "long", "country", "iso2", "iso3", "uid"])["cases", "deaths", "recovered"].sum().reset_index()
         df["recovered"] = df["recovered"].fillna(0)

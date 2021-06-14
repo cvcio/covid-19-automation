@@ -212,7 +212,7 @@ class IMEDDStrategy(object):
             value_name="value",
         )
         
-        df["date"] = pd.to_datetime(df["date"])
+        df["date"] = pd.to_datetime(df["date"], format='%m/%d/%y')
         df = df.pivot_table("value", ["date"], "status")
         df = df.reset_index()
         df[
