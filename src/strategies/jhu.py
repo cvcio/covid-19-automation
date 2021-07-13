@@ -421,6 +421,7 @@ class JHUStrategy(object):
             | cases["Country/Region"].str.contains("Grand Princess")
             | cases["Country/Region"].str.contains("Diamond Princess")
             | cases["Country/Region"].str.contains("MS Zaandam")
+            | cases["Country/Region"].str.contains("Summer Olympics 2020")
         )
         cases = cases[~(ships_rows)]
         ships_rows = (
@@ -430,6 +431,7 @@ class JHUStrategy(object):
             | deaths["Country/Region"].str.contains("Grand Princess")
             | deaths["Country/Region"].str.contains("Diamond Princess")
             | deaths["Country/Region"].str.contains("MS Zaandam")
+            | deaths["Country/Region"].str.contains("Summer Olympics 2020")
         )
         deaths = deaths[~(ships_rows)]
         ships_rows = (
@@ -439,6 +441,7 @@ class JHUStrategy(object):
             | recovered["Country/Region"].str.contains("Grand Princess")
             | recovered["Country/Region"].str.contains("Diamond Princess")
             | recovered["Country/Region"].str.contains("MS Zaandam")
+            | recovered["Country/Region"].str.contains("Summer Olympics 2020")
         )
         recovered = recovered[~(ships_rows)]
         return cases, deaths, recovered
