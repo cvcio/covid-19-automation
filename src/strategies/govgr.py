@@ -107,12 +107,6 @@ class GovGRStrategy(object):
                 )
             )
     
-    # def add_month(self, d, m):
-    #     month = d.month - 1 + m
-    #     year = d.year + month // 12
-    #     month = month % 12 + 1
-    #     day = min(d.day, calendar.monthrange(year,month)[1])
-    #     return date(year, month, day)
     
     def get_url(self, url):
         headers = {
@@ -154,20 +148,7 @@ class GovGRStrategy(object):
         fips = pd.read_csv("./data/region-mapping-imedd.csv")
         fips = fips[fips["areaid"].notna()]
         fips = fips.rename(columns=COLUMN_MAPPINGS).to_dict("records")
-        
-        # url = "https://data.gov.gr/api/v1/query/mdg_emvolio?date_from=2020-12-27&date_to={}&{}".format(datetime.today().strftime("%Y-%m-%d"), time.time())
-        # headers = {
-        #     "Authorization": "Token {}".format(self.config.get("govgr_token"))
-        # }
-        # logging.debug("[GOVGR] Fetching Data from {}".format(url))
-        # try:
-        #     response = requests.get(url, headers = headers)
-        #     response.raise_for_status()
-        # except HTTPError:
-        #     raise
-        # except Exception:
-        #     raise
-        
+
         response = self.get_recursive()
         logging.debug("[GOVGR] Data Loaded")
         
@@ -179,8 +160,10 @@ class GovGRStrategy(object):
             "daydiff": "day_diff",
             "totaldose1": "total_dose_1",
             "totaldose2": "total_dose_2",
+            "totaldose3": "total_dose_3",
             "dailydose1": "daily_dose_1",
             "dailydose2": "daily_dose_2",
+            "dailydose3": "daily_dose_3",
         })
         
         df["date"] = pd.to_datetime(df["referencedate"])
@@ -200,8 +183,11 @@ class GovGRStrategy(object):
         
         first_day.loc[:,"total_dose_1"] = first_day["temp"]
         first_day.loc[:,"total_dose_2"] = np.nan
+        first_day.loc[:,"total_dose_3"] = np.nan
+        
         first_day.loc[:,"daily_dose_1"] = first_day["temp"]
         first_day.loc[:,"daily_dose_2"] = np.nan
+        first_day.loc[:,"daily_dose_3"] = np.nan
         
         first_day = first_day.drop(columns=["temp"])
         
@@ -214,14 +200,15 @@ class GovGRStrategy(object):
                 ["date", "area", "areaid", "uid"]
             )[[
                 "total_distinct_persons", "total_vaccinations", "day_total", "day_diff",
-                "total_dose_1", "total_dose_2", "daily_dose_1", "daily_dose_2",
+                "total_dose_1", "total_dose_2", "total_dose_3", 
+                "daily_dose_1", "daily_dose_2", "daily_dose_3"
                 ]]
             .sum()
             .reset_index()
         )
 
         # calc new values per date on cases, deaths, recovered
-        temp = group.groupby(["uid", "date"])[["total_distinct_persons", "total_vaccinations", "total_dose_1", "total_dose_2"]]
+        temp = group.groupby(["uid", "date"])[["total_distinct_persons", "total_vaccinations", "total_dose_1", "total_dose_2", "total_dose_3"]]
         temp = temp.sum().diff().reset_index()
         
         mask = temp["uid"] != temp["uid"].shift(1)
@@ -229,6 +216,7 @@ class GovGRStrategy(object):
         temp.loc[mask, "total_vaccinations"] = np.nan
         temp.loc[mask, "total_dose_1"] = np.nan
         temp.loc[mask, "total_dose_2"] = np.nan
+        temp.loc[mask, "total_dose_3"] = np.nan
         
         # renaming columns
         temp.columns = [
@@ -237,7 +225,8 @@ class GovGRStrategy(object):
             "new_total_distinct_persons",
             "new_total_vaccinations",
             "new_total_dose_1",
-            "new_total_dose_2"
+            "new_total_dose_2",
+            "new_total_dose_3",
         ]
         
         # merging new values
@@ -250,14 +239,16 @@ class GovGRStrategy(object):
                 "new_total_distinct_persons",
                 "new_total_vaccinations",
                 "new_total_dose_1",
-                "new_total_dose_2"
+                "new_total_dose_2",
+                "new_total_dose_3",
             ]
         ] = group[
             [
                 "new_total_distinct_persons",
                 "new_total_vaccinations",
                 "new_total_dose_1",
-                "new_total_dose_2"
+                "new_total_dose_2",
+                "new_total_dose_3"
             ]
         ].astype(
             "int"
@@ -269,6 +260,7 @@ class GovGRStrategy(object):
         df.loc[df["date"] == pd.to_datetime(datetime.strptime("2020-12-27", "%Y-%m-%d")), ["new_total_vaccinations"]] = df["day_total"]
         df.loc[df["date"] == pd.to_datetime(datetime.strptime("2020-12-27", "%Y-%m-%d")), ["new_total_dose_1"]] = df["day_total"]
         df.loc[df["date"] == pd.to_datetime(datetime.strptime("2020-12-27", "%Y-%m-%d")), ["new_total_dose_2"]] = np.nan
+        df.loc[df["date"] == pd.to_datetime(datetime.strptime("2020-12-27", "%Y-%m-%d")), ["new_total_dose_3"]] = np.nan
         # filling na with 0
         df = df.fillna(0)
         
@@ -276,16 +268,16 @@ class GovGRStrategy(object):
         df[
             [
                 "total_distinct_persons", "total_vaccinations", "day_total", "day_diff",
-                "total_dose_1", "total_dose_2", "daily_dose_1", "daily_dose_2",
-                "new_total_dose_1",
-                "new_total_dose_2"
+                "total_dose_1", "total_dose_2", "total_dose_3",
+                "daily_dose_1", "daily_dose_2", "daily_dose_3",
+                "new_total_dose_1", "new_total_dose_2", "new_total_dose_3"
             ]
         ] = df[
             [
                 "total_distinct_persons", "total_vaccinations", "day_total", "day_diff",
-                "total_dose_1", "total_dose_2", "daily_dose_1", "daily_dose_2",
-                "new_total_dose_1",
-                "new_total_dose_2"
+                "total_dose_1", "total_dose_2", "total_dose_3", 
+                "daily_dose_1", "daily_dose_2", "daily_dose_3",
+                "new_total_dose_1", "new_total_dose_2", "new_total_dose_3"
             ]
         ].astype(
             "int"

@@ -155,7 +155,7 @@ def cli():
     parser.add_argument(
         "--source",
         dest="source",
-        help="Set source (all|jhu|who|worldometer|imedd)",
+        help="Set source (all|jhu|govgr|imedd)",
         default="all",
     )
     parser.add_argument(
