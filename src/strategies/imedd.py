@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from datetime import datetime, timedelta
-from utils.numerical import calc_fatality_ratio, calc_incidence_rate
+from utils.numerical import calc_fatality_ratio, calc_incidence_rate, calc_available_icus
 from pymongo import ReplaceOne
 
 from conf.constants import (
@@ -227,7 +227,8 @@ class IMEDDStrategy(object):
             greece_fips[0]["uid"]
         ]
         df = df.rename(columns={
-            "cases": "new_cases", "deaths": "new_deaths", 
+            "cases": "new_cases", 
+            "deaths": "new_deaths", 
             "hospitalized": "new_hospitalized",
             "total cases": "cases",
             "intubated": "critical",
@@ -236,13 +237,31 @@ class IMEDDStrategy(object):
             "estimated_new_rtpcr_tests": "new_tests_rtpcr",
             "cumulative_rapid_tests_raw": "tests_rapid",
             "esitmated_new_rapid_tests": "new_tests_rapid",
+            
+            "icu_discharges": "icu_discharges",
+            "hospital_admissions": "new_hospital_admissions",
+            "hospital_discharges": "new_hospital_discharges",
+            "intubated_unvac": "intubated_unvac",
+            "intubated_vac": "intubated_vac",
+            "icu_occupancy": "icu_occupancy",
+            "beds_occupancy": "beds_occupancy"
         }) 
+        
+        # new_hospital_admissions,new_hospital_discharges,icu_occupancy,beds_occupancy
         
         df["deaths"] = df.new_deaths.cumsum()
         df["deaths"] = df["deaths"].fillna(method='pad')
         df["tests"] = df.new_tests.cumsum()
         df["critical"] = df["critical"].fillna(method='pad')
         df["recovered"] = df["recovered"].fillna(method='pad')
+        
+        df["icu_discharges"] = df["icu_discharges"].fillna(method='pad')
+        df["new_hospital_admissions"] = df["new_hospital_admissions"] # .fillna(method='pad')
+        df["new_hospital_discharges"] = df["new_hospital_discharges"] # .fillna(method='pad')
+        df["intubated_unvac"] = df["intubated_unvac"].fillna(method='pad')
+        df["intubated_vac"] = df["intubated_vac"].fillna(method='pad')
+        df["icu_occupancy"] = df["icu_occupancy"] # .fillna(method='pad')
+        df["beds_occupancy"] = df["beds_occupancy"] # .fillna(method='pad')
         
         group = (
             df.groupby(
@@ -272,6 +291,9 @@ class IMEDDStrategy(object):
                 
         df["tests"] = df.new_tests.cumsum()
         df["active"] = df["cases"] - df["deaths"] - df["recovered"]
+        
+        df["hospital_admissions"] = df.new_hospital_admissions.cumsum()
+        df["hospital_discharges"] = df.new_hospital_discharges.cumsum()
 
         # fixing data types
         df[
@@ -294,7 +316,15 @@ class IMEDDStrategy(object):
                 "new_tests_rapid",
                 
                 "tests",
-                "new_tests"
+                "new_tests",
+                
+                "icu_discharges",
+                "hospital_admissions",
+                "hospital_discharges",
+                "new_hospital_admissions",
+                "new_hospital_discharges",
+                "intubated_unvac",
+                "intubated_vac",
             ]
         ] = df[
             [
@@ -316,15 +346,39 @@ class IMEDDStrategy(object):
                 "new_tests_rapid",
                 
                 "tests",
-                "new_tests"
+                "new_tests",
+                
+                "icu_discharges",
+                "hospital_admissions",
+                "hospital_discharges",
+                "new_hospital_admissions",
+                "new_hospital_discharges",
+                "intubated_unvac",
+                "intubated_vac",
             ]
         ].astype(
             "int"
+        )
+        
+        df[
+            [
+                "icu_occupancy",
+                "beds_occupancy"
+            ]
+        ] = df[
+            [
+                "icu_occupancy",
+                "beds_occupancy"
+            ]
+        ].astype(
+            "float"
         )
 
         # df = group
         df["case_fatality_ratio"] = df.apply(calc_fatality_ratio, axis=1)
         df["incidence_rate"] = df.apply(calc_incidence_rate, axis=1)
+        df["icu_availability"] = df.apply(calc_available_icus, axis=1)
+        
         df["source"] = "imedd"
         df = df[
             [
@@ -348,6 +402,18 @@ class IMEDDStrategy(object):
                 "critical", 
                 "incidence_rate",
                 "case_fatality_ratio",
+                
+                "icu_discharges",
+                "hospital_admissions",
+                "hospital_discharges",
+                "new_hospital_admissions",
+                "new_hospital_discharges",
+                "intubated_unvac",
+                "intubated_vac",
+                
+                "icu_occupancy",
+                "beds_occupancy",
+                "icu_availability",
                 
                 "tests_rtpcr",
                 "new_tests_rtpcr", 

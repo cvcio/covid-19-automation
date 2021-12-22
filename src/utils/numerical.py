@@ -26,3 +26,7 @@ def calc_incidence_rate(x):
         if x["population"] == 0
         else round(float((x["cases"] * 100000) / x["population"]), 4)
     )
+
+# Available ICUs
+def calc_available_icus(x):
+    return 0 if x["icu_occupancy"] == 0 else int((x["critical"] * 100) / x["icu_occupancy"])
